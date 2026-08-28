@@ -9,7 +9,7 @@ import (
 func newTestDB(t *testing.T) (*LogDB, string) {
 	t.Helper()
 
-	path := "db.log"
+	path := filepath.Join(t.TempDir(), "db.log")
 
 	db, err := Open(path)
 	if err != nil {
@@ -20,7 +20,7 @@ func newTestDB(t *testing.T) (*LogDB, string) {
 }
 
 func TestOpen(t *testing.T) {
-	path := "db.log"
+	path := filepath.Join(t.TempDir(), "db.log")
 
 	db, err := Open(path)
 	if err != nil {
@@ -208,8 +208,7 @@ func TestPersistence(t *testing.T) {
 }
 
 func TestDeletePersistence(t *testing.T) {
-	// path := filepath.Join(t.TempDir(), "db.log")
-	path := "db.log"
+	path := filepath.Join(t.TempDir(), "db.log")
 
 	db, err := Open(path)
 	if err != nil {
