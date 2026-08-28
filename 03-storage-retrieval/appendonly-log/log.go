@@ -7,8 +7,6 @@ import (
 	"io"
 	"math"
 	"os"
-
-	"github.com/rijalghodi/ddia/03-storage-retrieval/hashindex"
 )
 
 const (
@@ -23,7 +21,7 @@ const (
 
 type LogDB struct {
 	file  *os.File
-	index *hashindex.HashIndex
+	index *HashIndex
 }
 
 func Open(path string) (*LogDB, error) {
@@ -32,49 +30,12 @@ func Open(path string) (*LogDB, error) {
 		return nil, err
 	}
 
-	index := hashindex.New()
-
-	if err := populateHashIndex(file, index); err != nil {
-		return nil, fmt.Errorf("populate hash index error = %v", err)
-	}
+	index := NewHashIndex(file)
 
 	return &LogDB{
 		file:  file,
 		index: index,
 	}, nil
-}
-
-func populateHashIndex(file *os.File, index *hashindex.HashIndex) error {
-	info, err := file.Stat()
-	if err != nil {
-		return err
-	}
-
-	size := info.Size()
-	offset := int64(0)
-
-	for offset < size {
-		_, err := file.Seek(offset, io.SeekStart)
-		if err != nil {
-			return err
-		}
-
-		op, key, _, recordSize, err := readRecord(file)
-		if err != nil {
-			return err
-		}
-
-		switch op {
-		case opPut:
-			index.Put(key, offset)
-		case opDelete:
-			index.Delete(key)
-		}
-
-		offset += recordSize
-	}
-
-	return nil
 }
 
 func (db *LogDB) Put(key string, value string) error {
@@ -93,12 +54,7 @@ func (db *LogDB) Get(key string) (string, bool, error) {
 		return "", false, nil
 	}
 
-	_, err := db.file.Seek(offset, io.SeekStart)
-	if err != nil {
-		return "", false, err
-	}
-
-	_, readKey, value, _, err := readRecord(db.file)
+	readKey, value, _, err := db.readRecordAt(offset)
 	if err != nil {
 		return "", false, err
 	}
@@ -143,6 +99,24 @@ func (db *LogDB) appendRecord(op byte, key, value string) (int64, error) {
 	}
 
 	return offset, nil
+}
+
+func (db *LogDB) readRecordAt(offset int64) (key, value string, size int64, err error) {
+	_, err = db.file.Seek(offset, io.SeekStart)
+	if err != nil {
+		return "", "", 0, err
+	}
+
+	op, key, value, size, err := readRecord(db.file)
+	if err != nil {
+		return "", "", 0, err
+	}
+
+	if op == opDelete {
+		return "", "", size, nil
+	}
+
+	return key, value, size, nil
 }
 
 // readRecord reads a single record (op byte, header, key, value) from the reader.

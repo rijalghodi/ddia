@@ -4,7 +4,7 @@ type HashIndex struct {
 	items map[string]int64
 }
 
-func New() *HashIndex {
+func NewHashIndex() *HashIndex {
 	return &HashIndex{
 		items: map[string]int64{},
 	}
