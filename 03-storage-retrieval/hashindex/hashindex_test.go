@@ -1,8 +1,9 @@
 package hashindex
 
 import "testing"
+
 func TestGet(t *testing.T) {
-    index := NewHashIndex()
+    index := New()
 
     index.Put("name", 0)
     index.Put("age", 11)
@@ -19,7 +20,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestGetMissingKey(t *testing.T) {
-    index := NewHashIndex()
+    index := New()
 
     _, ok := index.Get("unknown")
 
@@ -29,7 +30,7 @@ func TestGetMissingKey(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-    index := NewHashIndex()
+    index := New()
 
     index.Put("name", 0)
 
@@ -47,7 +48,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestDeleteMissingKey(t *testing.T) {
-    index := NewHashIndex()
+    index := New()
 
     deleted := index.Delete("unknown")
 
