@@ -114,6 +114,8 @@ func main() {
 			} else {
 				fmt.Println("OK")
 			}
+		case "help":
+			printAvailableCommand()
 		case "quit", "exit":
 			fmt.Println("Goodbye!")
 			return
