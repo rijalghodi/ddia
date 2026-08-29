@@ -1,14 +1,18 @@
 package segmentedlog
 
-import "io"
+import (
+	"io"
+	"sync"
+)
 
 // RecordLocation stores where a record is located across segments
 type RecordLocation struct {
-	SegmentID int
+	SegmentID int64
 	Offset    int64
 }
 
 type HashIndex struct {
+	mu    sync.RWMutex
 	items map[string]RecordLocation
 }
 
@@ -19,15 +23,21 @@ func NewHashIndex() *HashIndex {
 }
 
 func (h *HashIndex) Put(key string, loc RecordLocation) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	h.items[key] = loc
 }
 
 func (h *HashIndex) Get(key string) (RecordLocation, bool) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
 	value, ok := h.items[key]
 	return value, ok
 }
 
 func (h *HashIndex) Delete(key string) bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	_, ok := h.items[key]
 	if !ok {
 		return false
@@ -35,6 +45,17 @@ func (h *HashIndex) Delete(key string) bool {
 
 	delete(h.items, key)
 	return true
+}
+
+func (h *HashIndex) Snapshot() map[string]RecordLocation {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	
+	snapshot := make(map[string]RecordLocation, len(h.items))
+	for k, v := range h.items {
+		snapshot[k] = v
+	}
+	return snapshot
 }
 
 func (h *HashIndex) PopulateHashIndex(seg *Segment) error {

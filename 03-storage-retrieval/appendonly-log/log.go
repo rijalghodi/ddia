@@ -161,8 +161,8 @@ func keyValueToBytes(op byte, key, value string) ([]byte, error) {
 	buf := make([]byte, headerSize+int(keyLen)+int(valueLen))
 
 	buf[0] = op
-	binary.BigEndian.PutUint32(buf[1:5], keyLen)
-	binary.BigEndian.PutUint32(buf[5:9], valueLen)
+	binary.BigEndian.PutUint32(buf[opSize:opSize+keyLenSize], keyLen)
+	binary.BigEndian.PutUint32(buf[opSize+keyLenSize:headerSize], valueLen)
 
 	copy(buf[headerSize:], key)
 	copy(buf[headerSize+int(keyLen):], value)
