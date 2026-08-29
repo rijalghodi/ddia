@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	appendonly "github.com/rijalghodi/ddia/03-storage-retrieval/appendonly-log"
-	segmented "github.com/rijalghodi/ddia/03-storage-retrieval/segmented-log"
+	appendonly "github.com/rijalghodi/ddia/03-storage-retrieval/appendonlylog"
+	segmented "github.com/rijalghodi/ddia/03-storage-retrieval/segmentedlog"
 )
 
 type Database interface {
