@@ -50,7 +50,7 @@ func (h *HashIndex) Delete(key string) bool {
 func (h *HashIndex) Snapshot() map[string]RecordLocation {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-	
+
 	snapshot := make(map[string]RecordLocation, len(h.items))
 	for k, v := range h.items {
 		snapshot[k] = v

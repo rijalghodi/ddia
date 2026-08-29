@@ -14,9 +14,9 @@ func readRecord(r io.Reader) (op byte, key, value string, size int64, err error)
 		return 0, "", "", 0, err
 	}
 
-	op = header[0]
-	keyLen := binary.BigEndian.Uint32(header[1:5])
-	valueLen := binary.BigEndian.Uint32(header[5:9])
+	op = header[opOffset]
+	keyLen := binary.BigEndian.Uint32(header[keyOffset:valueOffset])
+	valueLen := binary.BigEndian.Uint32(header[valueOffset:headerSize])
 
 	keyBytes := make([]byte, keyLen)
 	if _, err = io.ReadFull(r, keyBytes); err != nil {
@@ -40,9 +40,9 @@ func keyValueToBytes(op byte, key, value string) ([]byte, error) {
 	valueLen := uint32(len(value))
 
 	buf := make([]byte, headerSize+int(keyLen)+int(valueLen))
-	buf[0] = op
-	binary.BigEndian.PutUint32(buf[opSize:opSize+keyLenSize], keyLen)
-	binary.BigEndian.PutUint32(buf[opSize+keyLenSize:headerSize], valueLen)
+	buf[opOffset] = op
+	binary.BigEndian.PutUint32(buf[keyOffset:valueOffset], keyLen)
+	binary.BigEndian.PutUint32(buf[valueOffset:headerSize], valueLen)
 
 	copy(buf[headerSize:], key)
 	copy(buf[headerSize+int(keyLen):], value)

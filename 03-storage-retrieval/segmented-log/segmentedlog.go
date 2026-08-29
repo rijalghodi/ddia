@@ -15,11 +15,11 @@ const (
 	opPut    byte = 0
 	opDelete byte = 1
 
-	opSize       = 1
-	keyLenSize   = 4
-	valueLenSize = 4
-	headerSize   = opSize + keyLenSize + valueLenSize
-	dbFileExt    = ".log"
+	opOffset    = 0
+	keyOffset   = 1
+	valueOffset = 5
+	headerSize  = 9
+	dbFileExt   = ".log"
 )
 
 type SegmentedLog struct {
@@ -113,7 +113,7 @@ func (db *SegmentedLog) Get(key string) (string, bool, error) {
 	db.mu.RLock()
 	seg, ok := db.segments[recordLocation.SegmentID]
 	db.mu.RUnlock()
-	
+
 	if !ok {
 		return "", false, nil
 	}
@@ -147,7 +147,7 @@ func (db *SegmentedLog) Delete(key string) error {
 
 	_, err = db.activeSegment.AppendBytes(keyValueBytes)
 	db.mu.Unlock()
-	
+
 	if err != nil {
 		return err
 	}
@@ -262,7 +262,7 @@ func (db *SegmentedLog) loadSegments() error {
 func (db *SegmentedLog) identifyInactiveSegments() (inactiveIDs []int64, compactID int64) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
-	
+
 	compactID = -1
 	for id := range db.segments {
 		if id == db.activeSegment.ID {
@@ -282,7 +282,7 @@ func (db *SegmentedLog) writeCompactedData(compactID int64, inactiveIDs []int64)
 	if err != nil {
 		return nil, err
 	}
-	// We do NOT defer os.Remove(tmpPath) here because we need it to survive 
+	// We do NOT defer os.Remove(tmpPath) here because we need it to survive
 	// for the atomic swap in the next step. If an error occurs, we manually remove it.
 	defer tmpFile.Close()
 
@@ -338,7 +338,7 @@ func (db *SegmentedLog) swapCompactedSegments(compactID int64, inactiveIDs []int
 
 	tmpPath := filepath.Join(db.dir, fmt.Sprintf("%d%s.tmp", compactID, dbFileExt))
 	finalPath := filepath.Join(db.dir, fmt.Sprintf("%d%s", compactID, dbFileExt))
-	
+
 	if err := os.Rename(tmpPath, finalPath); err != nil {
 		return err
 	}
